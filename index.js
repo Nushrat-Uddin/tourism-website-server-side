@@ -25,8 +25,17 @@ async function run(){
         await client.connect();
         const database = client.db('destinationsInfo');
         const destinationsCollection = database.collection('destinations');
-        
         const usersCollection =database.collection('users');
+
+
+        // GET all users
+        app.get('/users', async (req, res) => {
+            const cursor = usersCollection.find({});
+            const users = await cursor.toArray();
+            res.send(users);
+        })
+
+
         // POST users
         app.post('/users', async(req,res)=>{
             const user = req.body;
@@ -35,6 +44,18 @@ async function run(){
             console.log(result);
             res.json(result);
         })
+
+        // DELETE API for user
+
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = usersCollection.deleteOne(query);
+            console.log('delete the users by id', id)
+            res.json(result)
+        })
+
+
 
         // GET API
         app.get('/destinations',async(req,res)=>{
@@ -64,6 +85,34 @@ async function run(){
             console.log(result);
             res.json(result);
         })
+
+        // DELETE API FOR a single destination
+        app.delete('/destinations/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await destinationsCollection.deleteOne(query);
+            res.json(result);
+        });
+
+        //update API user
+        app.put('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const updateUser = req.body;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    status: updateUser[0]
+                }
+            };
+            const result = await usersCollection.updateMany(filter, updateDoc, options);
+            console.log(result)
+            res.send(result);
+
+
+        });
+
+        
     }
     finally{
         // await client.close();
